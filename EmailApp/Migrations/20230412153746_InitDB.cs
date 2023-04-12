@@ -5,7 +5,7 @@
 namespace EmailApp.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class InitDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,26 +29,26 @@ namespace EmailApp.Migrations
                 {
                     ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Sender = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    UserID = table.Column<int>(type: "int", nullable: false),
+                    Sender = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    RecipientUserID = table.Column<int>(type: "int", nullable: false),
                     Subject = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Body = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Body = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Messages", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_Messages_Users_UserID",
-                        column: x => x.UserID,
+                        name: "FK_Messages_Users_RecipientUserID",
+                        column: x => x.RecipientUserID,
                         principalTable: "Users",
                         principalColumn: "UserID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Messages_UserID",
+                name: "IX_Messages_RecipientUserID",
                 table: "Messages",
-                column: "UserID");
+                column: "RecipientUserID");
         }
 
         /// <inheritdoc />

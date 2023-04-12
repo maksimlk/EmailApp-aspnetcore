@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿#nullable disable
+
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EmailApp.Data.Models
@@ -12,7 +14,6 @@ namespace EmailApp.Data.Models
         [StringLength(50)]
         public string Sender { get; set; }
         [Required(ErrorMessage = "Recipient name is not valid")]
-        [ForeignKey(nameof(MailUser.UserID))]
         public MailUser Recipient { get; set; }
         [Required(ErrorMessage = "The subject is required")]
         [StringLength(255)]

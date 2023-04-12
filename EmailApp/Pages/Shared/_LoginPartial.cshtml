@@ -1,5 +1,5 @@
 ﻿<ul class="navbar-nav">
-    @if (User.Identity.IsAuthenticated)
+    @if(User.Identity != null && User.Identity.IsAuthenticated)
     {
         <li class="nav-item">
             <label id="manage" class="nav-link text-dark" asp-area="Identity" title="Manage">Hello @User.Identity.Name! </label>

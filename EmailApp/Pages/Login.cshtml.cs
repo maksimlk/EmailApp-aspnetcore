@@ -23,17 +23,17 @@ namespace EmailApp.Pages
 
 
         [BindProperty]
-        public InputModel Input { get; set; }
-        public string ReturnUrl { get; set; }
-        public string ErrorMessage { get; set; }
+        public InputModel? Input { get; set; }
+        public string? ReturnUrl { get; set; }
+        public string? ErrorMessage { get; set; }
         public class InputModel
         {
             [Required(ErrorMessage = "Name is necessary!")]
             [StringLength(50, ErrorMessage = "Maximum length of the name is 50 letters!")]
             [DataType(DataType.Text)]
-            public string Name { get; set; }
+            public string? Name { get; set; }
         }
-        public async Task OnGetAsync(string returnUrl = null)
+        public async Task OnGetAsync(string? returnUrl = null)
         {
 			if (!string.IsNullOrEmpty(ErrorMessage))
 			{
@@ -41,24 +41,23 @@ namespace EmailApp.Pages
 			}
 
 			returnUrl ??= Url.Content("~/");
-
 			await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
 			ReturnUrl = returnUrl;
 		}
 
-        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+        public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
         {
-            if (ModelState.IsValid)
+            returnUrl ??= Url.Content("~/");
+            if (ModelState.IsValid && Input?.Name != null)
             {
-                string name = Input.Name;
-				await AddUserIfNotPresentAsync(name);
-				await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                string name = Input.Name.ToLower();
+                await AddUserIfNotPresentAsync(name);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                     GetPrincipalClames(name));
-                return LocalRedirect("/Index/");
             }
-            return Page();
+            return LocalRedirect(returnUrl);
         }
+
 
         private async Task AddUserIfNotPresentAsync(string name)
         {
@@ -74,7 +73,7 @@ namespace EmailApp.Pages
         {
 			var claims = new List<Claim>
 				{
-					new Claim(ClaimTypes.Name, Input.Name.ToLower()),
+					new Claim(ClaimTypes.Name, name),
 				};
 			var claimsIdentity = new ClaimsIdentity(claims,
 				CookieAuthenticationDefaults.AuthenticationScheme);

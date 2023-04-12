@@ -48,11 +48,12 @@ namespace EmailApp.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
 
                     b.Property<string>("Body")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("RecipientUserID")
+                        .HasColumnType("int");
+
                     b.Property<string>("Sender")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -61,12 +62,9 @@ namespace EmailApp.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
-
                     b.HasKey("ID");
 
-                    b.HasIndex("UserID");
+                    b.HasIndex("RecipientUserID");
 
                     b.ToTable("Messages");
                 });
@@ -75,7 +73,7 @@ namespace EmailApp.Migrations
                 {
                     b.HasOne("EmailApp.Data.Models.MailUser", "Recipient")
                         .WithMany("Messages")
-                        .HasForeignKey("UserID")
+                        .HasForeignKey("RecipientUserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

@@ -1,29 +1,31 @@
-﻿using EmailApp.Data;
+﻿#nullable disable
+
+using EmailApp.Data;
 using EmailApp.Data.Models;
+using EmailApp.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
-
+using System.Net.Mail;
 
 namespace EmailApp.Pages
 {
 	[Authorize]
-	public class IndexModel : PageModel, IDisposable
+	public class IndexModel : PageModel
 	{
 		private readonly ILogger<IndexModel> _logger;
 		private readonly MailAppDbContext _context;
-		private readonly NavigationManager _navmanager;
-
-		private HubConnection? hubConnection;
-		public IndexModel(ILogger<IndexModel> logger, MailAppDbContext context, NavigationManager navmanager)
+		private readonly IHubContext<MailHub> _hub;
+		public IndexModel(ILogger<IndexModel> logger, MailAppDbContext context, IHubContext<MailHub> hub)
 		{
 			_logger = logger;
 			_context = context;
-			_navmanager = navmanager;
+			_hub = hub;
 		}
 
 		public IList<Message> Messages { get; set; } = new List<Message>();
@@ -65,17 +67,20 @@ namespace EmailApp.Pages
 
 		private void PopulateMessageList(MailUser currentUser)
 		{
-			var messages = _context.Messages.Where<Message>(m => m.Recipient == currentUser).ToList();
+			var messages = _context.Messages.Where<Message>(m => m.Recipient == currentUser);
 			if (!messages.IsNullOrEmpty())
-				Messages = currentUser.Messages.OrderByDescending(message => message.ID).ToList();
+				Messages = messages.OrderByDescending(message => message.ID).ToList();
 		}
 
 		public async Task<IActionResult> OnPostSendMessageAsync()
 		{
+			if (!ModelState.IsValid)
+				return Page();
 			var recipientUserName = Input.RecipientName;
 			var recipient = GetRecipientOrCreate(recipientUserName);
 			var message = CreateMessage(recipient);
 			SaveMessage(message);
+			await _hub.Clients.User(recipientUserName).SendAsync("ReceiveMessage");
 			_logger.LogInformation(User.Identity.Name + " send a message to " + recipientUserName);
 			return LocalRedirect("/Index/");
 		}
@@ -101,14 +106,6 @@ namespace EmailApp.Pages
 		{
 			_context.Messages.Add(message);
 			_context.SaveChanges();
-		}
-
-		public async void Dispose()
-		{
-			if (hubConnection is not null)
-			{
-				await hubConnection.DisposeAsync();
-			}
 		}
 	}
 }
